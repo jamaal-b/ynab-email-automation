@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  ynab-emailer:
+    build: .
+    container_name: ynab-emailer
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=America/New_York
+    volumes:
+      - ./logs:/app/logs
+    # Optional: if you want to customize templates
+    # volumes:
+    #   - ./templates:/app/templates

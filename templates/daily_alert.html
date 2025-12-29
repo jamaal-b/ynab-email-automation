@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header .date {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .section h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #667eea;
+        }
+        .alert-box {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #e74c3c;
+        }
+        .warning-box {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #f39c12;
+        }
+        .success-box {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #27ae60;
+        }
+        .transaction {
+            background: #fff;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .transaction .payee {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .transaction .account {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+        .amount {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .category-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .category-name {
+            font-weight: 500;
+        }
+        .progress-bar {
+            background: #ecf0f1;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s;
+        }
+        .progress-fill.warning {
+            background: #f39c12;
+        }
+        .progress-fill.danger {
+            background: #e74c3c;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 13px;
+            border-top: 1px solid #ecf0f1;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Daily Budget Alert</h1>
+        <p class="date">{{ current_date }}</p>
+    </div>
+
+    {% if uncategorized_count > 0 %}
+    <div class="section">
+        <h2>⚠️ Uncategorized Transactions ({{ uncategorized_count }})</h2>
+        {% for transaction in uncategorized_transactions[:5] %}
+        <div class="transaction">
+            <div>
+                <div class="payee">{{ transaction.payee_name }}</div>
+                <div class="account">{{ transaction.account_name }} • {{ transaction.date }}</div>
+            </div>
+            <div class="amount">${{ "%.2f"|format(transaction.amount / 1000) }}</div>
+        </div>
+        {% endfor %}
+        {% if uncategorized_count > 5 %}
+        <p style="text-align: center; color: #7f8c8d; margin: 10px 0 0 0;">
+            + {{ uncategorized_count - 5 }} more transactions
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if category_status.overspent %}
+    <div class="section">
+        <h2>🚨 Overspent Categories</h2>
+        {% for category in category_status.overspent %}
+        <div class="alert-box">
+            <div class="category-stat">
+                <span class="category-name">{{ category.name }}</span>
+                <span class="amount" style="color: #e74c3c;">-${{ "%.2f"|format(category.balance|abs) }}</span>
+            </div>
+            <div style="font-size: 13px; color: #7f8c8d; margin-top: 5px;">
+                Budgeted: ${{ "%.2f"|format(category.budgeted) }} • 
+                Spent: ${{ "%.2f"|format(category.activity) }} 
+                ({{ "%.0f"|format(category.percent_used) }}%)
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if category_status.warning %}
+    <div class="section">
+        <h2>⚡ Categories Near Limit ({{ threshold }}%+)</h2>
+        {% for category in category_status.warning %}
+        <div class="warning-box">
+            <div class="category-stat">
+                <span class="category-name">{{ category.name }}</span>
+                <span class="amount">${{ "%.2f"|format(category.balance) }}</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill {% if category.percent_used >= 95 %}danger{% else %}warning{% endif %}" 
+                     style="width: {{ category.percent_used }}%"></div>
+            </div>
+            <div style="font-size: 13px; color: #7f8c8d; margin-top: 5px;">
+                Budgeted: ${{ "%.2f"|format(category.budgeted) }} • 
+                Spent: ${{ "%.2f"|format(category.activity) }} 
+                ({{ "%.0f"|format(category.percent_used) }}%)
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not uncategorized_count and not category_status.overspent and not category_status.warning %}
+    <div class="empty-state">
+        <div class="empty-state-icon">✨</div>
+        <h3>All Clear!</h3>
+        <p>No uncategorized transactions and all categories are looking good.</p>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        Generated by YNAB Email Automation
+    </div>
+</body>
+</html>
