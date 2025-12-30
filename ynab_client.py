@@ -291,7 +291,8 @@ class YNABDataProcessor:
                         continue
                     
                     # Get the amount from the subtransaction
-                    sub_amount = abs(sub.get('amount', 0)) / 1000
+                    # REMOVED abs() to keep the sign (negative for spending, positive for returns)
+                    sub_amount = sub.get('amount', 0) / 1000
                     
                     # Add to the appropriate category
                     if sub_cat_name not in category_totals:
@@ -301,7 +302,10 @@ class YNABDataProcessor:
                             "transactions": []
                         }
                     
-                    category_totals[sub_cat_name]["total"] += sub_amount
+                    # SUBTRACT the amount:
+                    # Spending (-100) -> becomes +100 towards total spent
+                    # Return (+100)   -> becomes -100 towards total spent
+                    category_totals[sub_cat_name]["total"] -= sub_amount
                     category_totals[sub_cat_name]["count"] += 1
                     # Store the parent transaction but note it was from a split
                     category_totals[sub_cat_name]["transactions"].append(t)
@@ -315,7 +319,8 @@ class YNABDataProcessor:
             if 'inflow' in cat_name.lower() or 'ready to assign' in cat_name.lower():
                 continue
             
-            amount = abs(t.get('amount', 0)) / 1000  # Convert from milliunits
+            # REMOVED abs() here as well
+            amount = t.get('amount', 0) / 1000  # Convert from milliunits
             
             if cat_name not in category_totals:
                 category_totals[cat_name] = {
@@ -324,7 +329,8 @@ class YNABDataProcessor:
                     "transactions": []
                 }
             
-            category_totals[cat_name]["total"] += amount
+            # SUBTRACT the amount
+            category_totals[cat_name]["total"] -= amount
             category_totals[cat_name]["count"] += 1
             category_totals[cat_name]["transactions"].append(t)
         
