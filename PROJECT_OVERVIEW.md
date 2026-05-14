@@ -1,8 +1,8 @@
 # YNAB Email Automation - Project Overview
 
-## 📋 What I Built For You
+## 📋 What I Built 
 
-A complete Python application that automatically sends you beautiful HTML email reports about your YNAB budget on a schedule you specified.
+A complete Python application that automatically sends you beautiful HTML email reports about your YNAB budget on a schedule you specify. This is what I wanted to see.
 
 ## 📧 Email Schedule
 
