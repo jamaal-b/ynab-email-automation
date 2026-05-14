@@ -1,6 +1,6 @@
 # YNAB Email Automation
 
-Automated email reports for your YNAB budget with daily alerts, weekly recaps, and monthly summaries.
+Automated email reports for your YNAB budget with daily alerts, weekly recaps, and monthly summaries. I wanted to build this to get some more useful snapshots to quickly understand what's going on with my budget on a regular basis.
 
 ## Features
 
